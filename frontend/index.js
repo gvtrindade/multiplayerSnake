@@ -2,29 +2,38 @@ const BG_COLOR = "#231f20";
 const SNAKE_COLOR = "#c2c2c2";
 const FOOD_COLOR = "#e66916";
 
-const socket = io('http://localhost:3000');
+const socket = io("http://localhost:3002");
 
-socket.on('init', handleInit);
+socket.on("init", handleInit);
+socket.on("gameState", handleGameState);
+socket.on("gameOver", handleGameOver);
 
 const gameScreen = document.getElementById("gameScreen");
+const initialScreen = document.getElementById("initialScreen");
+const newGameButton = document.getElementById("newGameButton");
+const joinGameButton = document.getElementById("joinGameButton");
+const gameCodeInput = document.getElementById("gameCodeInput");
+
+newGameButton.addEventListener('click', newGame);
+joinGameButton.addEventListener('click', joinGame);
+
+function newGame(){
+  socket.emit('newGame');
+  init();
+}
+
+function joinGame(){
+  const code = gameCodeInput.value;
+  socket.emit('joinGame', code);
+  init();
+}
 
 let canvas, ctx;
 
-const gameState = {
-  player: {
-    pos: { x: 3, y: 10 },
-    vel: { x: 1, y: 0 },
-    snake: [
-      { x: 1, y: 10 },
-      { x: 2, y: 10 },
-      { x: 3, y: 10 },
-    ],
-  },
-  food: { x: 7, y: 7 },
-  gridsize: 20,
-};
-
 function init() {
+  initialScreen.style.display = 'none';
+  gameScreen.style.display = 'block';
+  
   canvas = document.getElementById("canvas");
   ctx = canvas.getContext("2d");
 
@@ -37,10 +46,8 @@ function init() {
 }
 
 function keydown(e) {
-  console.log(e.keyCode);
+  socket.emit("keydown", e.keyCode);
 }
-
-init();
 
 function paintGame(state) {
   ctx.fillStyle = BG_COLOR;
@@ -56,17 +63,24 @@ function paintGame(state) {
   painPlayer(state.player, size, SNAKE_COLOR);
 }
 
-function painPlayer(playerState, size, color){
-    const snake = playerState.snake;
+function painPlayer(playerState, size, color) {
+  const snake = playerState.snake;
 
-    ctx.fillStyle = color;
-    for(let cell of snake){
-        ctx.fillRect(cell.x * size, cell.y * size, size, size);
-    }
+  ctx.fillStyle = color;
+  for (let cell of snake) {
+    ctx.fillRect(cell.x * size, cell.y * size, size, size);
+  }
 }
 
-paintGame(gameState);
-
-function handleInit(msg){
+function handleInit(msg) {
   console.log(msg);
+}
+
+function handleGameState(gameState) {
+  gameState = JSON.parse(gameState);
+  requestAnimationFrame(() => paintGame(gameState));
+}
+
+function handleGameOver() {
+  alert("You lose!");
 }
