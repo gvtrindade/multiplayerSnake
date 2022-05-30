@@ -8,6 +8,7 @@ const clientRooms = {};
 
 io.on("connection", (client) => {
   client.on("keydown", handleKeyDown);
+  client.on("singleGame", handleSingleGame);
   client.on("newGame", handleNewGame);
   client.on("joinGame", handleJoinGame);
 
@@ -50,6 +51,20 @@ io.on("connection", (client) => {
     client.join(roomName);
     client.number = 1;
     client.emit("init", 1);
+  }
+
+  function handleSingleGame(){
+    let roomName = makeid(5);
+
+    clientRooms[client.id] = roomName;
+    state[roomName] = initGame();
+
+    client.join(roomName);
+    client.number = 1;
+    
+    client.emit("init", 1);
+    client.emit("init", 2);
+    startGameInterval(roomName);
   }
 
   function handleKeyDown(keyCode) {

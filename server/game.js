@@ -17,7 +17,7 @@ function createGameState() {
     players: [
       {
         pos: { x: 3, y: 10 },
-        vel: { x: 1, y: 0 },
+        vel: { x: 0, y: 0 },
         snake: [
           { x: 1, y: 10 },
           { x: 2, y: 10 },
@@ -25,12 +25,12 @@ function createGameState() {
         ],
       },
       {
-        pos: { x: 18, y: 10 },
-        vel: { x: 1, y: 0 },
+        pos: { x: 17, y: 5 },
+        vel: { x: 0, y: 0 },
         snake: [
-          { x: 20, y: 10 },
-          { x: 19, y: 10 },
-          { x: 18, y: 10 },
+          { x: 19, y: 5 },
+          { x: 18, y: 5 },
+          { x: 17, y: 5 },
         ],
       },
     ],
@@ -47,65 +47,14 @@ function gameLoop(state) {
   const playerOne = state.players[0];
   const playerTwo = state.players[1];
 
-  playerOne.pos.x += playerOne.vel.x;
-  playerOne.pos.y += playerOne.vel.y;
+  updatePosition(playerOne);
+  updatePosition(playerTwo);
 
-  playerTwo.pos.x += playerTwo.vel.x;
-  playerTwo.pos.y += playerTwo.vel.y;
+  eatFood(state, playerOne);
+  eatFood(state, playerTwo);
 
-  if (
-    playerOne.pos.x < 0 ||
-    playerOne.pos.x > GRID_SIZE ||
-    playerOne.pos.y < 0 ||
-    playerOne.pos.y > GRID_SIZE
-  ) {
-    return 2;
-  }
-
-  if (
-    playerTwo.pos.x < 0 ||
-    playerTwo.pos.x > GRID_SIZE ||
-    playerTwo.pos.y < 0 ||
-    playerTwo.pos.y > GRID_SIZE
-  ) {
-    return 1;
-  }
-
-  if (state.food.x === playerOne.pos.x && state.food.y === playerOne.pos.y) {
-    playerOne.snake.push({ ...playerOne.pos });
-    playerOne.pos.x += playerOne.vel.x;
-    playerOne.pos.y += playerOne.vel.y;
-    randomFood(state);
-  }
-
-  if (state.food.x === playerTwo.pos.x && state.food.y === playerTwo.pos.y) {
-    playerTwo.snake.push({ ...playerTwo.pos });
-    playerTwo.pos.x += playerTwo.vel.x;
-    playerTwo.pos.y += playerTwo.vel.y;
-    randomFood(state);
-  }
-
-  if (playerOne.vel.x || playerOne.vel.y) {
-    for (let cell of playerOne.snake) {
-      if (cell.x === playerOne.pos.x && cell.y === playerOne.pos.y) {
-        return 2;
-      }
-    }
-
-    playerOne.snake.push({ ...playerOne.pos });
-    playerOne.snake.shift();
-  }
-
-  if (playerTwo.vel.x || playerTwo.vel.y) {
-    for (let cell of playerTwo.snake) {
-      if (cell.x === playerTwo.pos.x && cell.y === playerTwo.pos.y) {
-        return 1;
-      }
-    }
-
-    playerTwo.snake.push({ ...playerTwo.pos });
-    playerTwo.snake.shift();
-  }
+  if (checkCollision(playerOne)) return 2;
+  if (checkCollision(playerTwo)) return 1;
 
   return false;
 }
@@ -129,6 +78,43 @@ function randomFood(state) {
   }
 
   state.food = food;
+}
+
+function eatFood(state, player) {
+  if (state.food.x === player.pos.x && state.food.y === player.pos.y) {
+    player.snake.push({ ...player.pos });
+    player.pos.x += player.vel.x;
+    player.pos.y += player.vel.y;
+    randomFood(state);
+  }
+}
+
+function updatePosition(player) {
+  player.pos.x += player.vel.x;
+  player.pos.y += player.vel.y;
+}
+
+function checkCollision(player) {
+  if (
+    player.pos.x < 0 ||
+    player.pos.x === GRID_SIZE ||
+    player.pos.y < 0 ||
+    player.pos.y === GRID_SIZE
+  ) {
+    return true;
+  }
+
+  if (player.vel.x || player.vel.y) {
+    for (let cell of player.snake) {
+      if (cell.x === player.pos.x && cell.y === player.pos.y) {
+        return true;
+      }
+    }
+    player.snake.push({ ...player.pos });
+    player.snake.shift();
+  }
+
+  return false;
 }
 
 function getUpdatedVelocity(keyCode) {

@@ -1,6 +1,6 @@
 const BG_COLOR = "#231f20";
 const SNAKE1_COLOR = "#c2c2c2";
-const SNAKE2_COLOR = "red";
+const SNAKE2_COLOR = "yellow";
 const FOOD_COLOR = "#e66916";
 
 const socket = io("http://localhost:3002");
@@ -14,13 +14,23 @@ socket.on("tooManyPlayers", handleTooManyPlayers);
 
 const gameScreen = document.getElementById("gameScreen");
 const initialScreen = document.getElementById("initialScreen");
+const singleGameButton = document.getElementById("singleGameButton");
 const newGameButton = document.getElementById("newGameButton");
 const joinGameButton = document.getElementById("joinGameButton");
 const gameCodeInput = document.getElementById("gameCodeInput");
 const gameCodeDisplay = document.getElementById("gameCodeDisplay");
 
+singleGameButton.addEventListener("click", singleGame);
 newGameButton.addEventListener("click", newGame);
 joinGameButton.addEventListener("click", joinGame);
+
+let isSingleGame = false;
+
+function singleGame(){
+  socket.emit("singleGame");
+  isSingleGame = true;
+  init();
+}
 
 function newGame() {
   socket.emit("newGame");
@@ -69,7 +79,11 @@ function paintGame(state) {
   ctx.fillRect(food.x * size, food.y * size, size, size);
 
   paintPlayer(state.players[0], size, SNAKE1_COLOR);
-  paintPlayer(state.players[1], size, SNAKE2_COLOR);
+  if(isSingleGame){
+    paintPlayer(state.players[1], size, "transparent");
+  } else {
+    paintPlayer(state.players[1], size, SNAKE2_COLOR);
+  }
 }
 
 function paintPlayer(playerState, size, color) {
@@ -99,12 +113,12 @@ function handleGameOver(data) {
   }
   data = JSON.parse(data);
   
-  if(data.winner === playerNumber){
+  if(data.winner === playerNumber && !isSingleGame){
     alert("You win!");
   } else {
     alert("You lose.");
   }
-
+  isSingleGame = false;
   gameActive = false;
 }
 
