@@ -3,7 +3,7 @@ const SNAKE1_COLOR = "#c2c2c2";
 const SNAKE2_COLOR = "yellow";
 const FOOD_COLOR = "#e66916";
 
-const socket = io("http://localhost:3002");
+const socket = io("https://multiplayersnake-production.up.railway.app/");
 
 socket.on("init", handleInit);
 socket.on("gameState", handleGameState);
